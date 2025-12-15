@@ -72,7 +72,8 @@ class JobExtractor(BaseExtractor[JobListExtraction]):
         if llm_client is None:
             from offer_sherlock.utils.config import LLMProvider
 
-            llm_client = LLMClient(provider=LLMProvider.QWEN, model="qwen-plus")
+            # Use qwen-max for better structured output parsing
+            llm_client = LLMClient(provider=LLMProvider.QWEN, model="qwen-max")
         super().__init__(llm_client, max_content_length)
 
     async def extract(

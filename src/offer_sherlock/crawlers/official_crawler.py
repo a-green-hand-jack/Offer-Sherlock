@@ -23,6 +23,7 @@ class CrawlTarget:
         css_selector: Optional CSS selector to extract specific content.
         wait_for: Optional wait condition (CSS selector or JS function).
         js_code: Optional JavaScript to execute before extraction.
+        delay: Delay in seconds before extracting content (for dynamic pages).
     """
 
     url: str
@@ -30,6 +31,7 @@ class CrawlTarget:
     css_selector: Optional[str] = None
     wait_for: Optional[str] = None
     js_code: Optional[str] = None
+    delay: float = 0.0
     metadata: dict = field(default_factory=dict)
 
 
@@ -51,11 +53,15 @@ class OfficialCrawler(BaseCrawler):
         ... )
     """
 
+    # Default delay for dynamic pages (seconds)
+    DEFAULT_DELAY = 3.0
+
     def __init__(
         self,
         headless: bool = True,
         verbose: bool = False,
         use_cache: bool = True,
+        default_delay: float = 3.0,
     ):
         """Initialize the crawler.
 
@@ -63,10 +69,13 @@ class OfficialCrawler(BaseCrawler):
             headless: Run browser in headless mode.
             verbose: Enable verbose logging.
             use_cache: Enable caching of crawled pages.
+            default_delay: Default delay before content extraction (seconds).
+                          Most career pages need 2-5 seconds for JS to load.
         """
         self.headless = headless
         self.verbose = verbose
         self.use_cache = use_cache
+        self.default_delay = default_delay
         self._browser_config = BrowserConfig(
             headless=headless,
             verbose=verbose,
@@ -79,6 +88,7 @@ class OfficialCrawler(BaseCrawler):
         wait_for: Optional[str] = None,
         js_code: Optional[str] = None,
         timeout: int = 30000,
+        delay: Optional[float] = None,
         **kwargs,
     ) -> CrawlResult:
         """Crawl a single URL and extract markdown content.
@@ -92,11 +102,16 @@ class OfficialCrawler(BaseCrawler):
                      or JS function (e.g., "js:() => document.querySelector('.loaded')")
             js_code: JavaScript code to execute before extraction.
             timeout: Page load timeout in milliseconds.
+            delay: Delay in seconds before extracting content.
+                  If None, uses default_delay. Set to 0 to disable.
             **kwargs: Additional options passed to CrawlerRunConfig.
 
         Returns:
             CrawlResult with extracted markdown content.
         """
+        # Use default delay if not specified
+        actual_delay = delay if delay is not None else self.default_delay
+
         # Build run configuration
         run_config = CrawlerRunConfig(
             cache_mode=CacheMode.ENABLED if self.use_cache else CacheMode.BYPASS,
@@ -104,6 +119,7 @@ class OfficialCrawler(BaseCrawler):
             wait_for=wait_for,
             js_code=js_code,
             page_timeout=timeout,
+            delay_before_return_html=actual_delay,
             **kwargs,
         )
 
@@ -175,6 +191,7 @@ class OfficialCrawler(BaseCrawler):
             css_selector=target.css_selector,
             wait_for=target.wait_for,
             js_code=target.js_code,
+            delay=target.delay if target.delay > 0 else None,
         )
         # Add target metadata to result
         if result.metadata is None:
