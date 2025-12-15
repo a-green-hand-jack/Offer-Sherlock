@@ -187,22 +187,30 @@ class XhsCrawler(BaseCrawler):
 
     async def _handle_login_modal(self, page: Page, max_wait: int = 120) -> bool:
         """处理搜索页面的登录弹窗。"""
-        login_modal = await page.query_selector('text="登录后查看搜索结果"')
-        if not login_modal:
-            return True
-
-        print("⚠️ 需要登录才能查看搜索结果，请在浏览器中登录...")
-
-        waited = 0
-        while waited < max_wait:
+        try:
             login_modal = await page.query_selector('text="登录后查看搜索结果"')
             if not login_modal:
-                await self._save_state()
                 return True
-            await asyncio.sleep(2)
-            waited += 2
 
-        return False
+            print("⚠️ 需要登录才能查看搜索结果，请在浏览器中登录...")
+
+            waited = 0
+            while waited < max_wait:
+                try:
+                    login_modal = await page.query_selector('text="登录后查看搜索结果"')
+                    if not login_modal:
+                        await self._save_state()
+                        return True
+                except Exception:
+                    # Page might have navigated, assume login succeeded
+                    return True
+                await asyncio.sleep(2)
+                waited += 2
+
+            return False
+        except Exception:
+            # Page context destroyed, likely due to navigation - assume OK
+            return True
 
     async def search(
         self,
