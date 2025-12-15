@@ -130,6 +130,7 @@ class XhsCrawler(BaseCrawler):
         """
         确保已登录小红书。
 
+        如果已有保存的登录状态，会先尝试使用。
         如果未登录，会等待用户手动登录。
 
         Args:
@@ -139,19 +140,28 @@ class XhsCrawler(BaseCrawler):
         Returns:
             是否登录成功
         """
-        # 访问首页
-        await page.goto("https://www.xiaohongshu.com", wait_until="domcontentloaded")
-        await asyncio.sleep(2)
-
-        # 检查是否已登录
+        # 先检查是否已有 cookie（从保存的状态加载的）
         cookies = await self._context.cookies()
         cookie_names = [c["name"] for c in cookies]
 
         if "web_session" in cookie_names:
+            print("✅ 使用已保存的登录状态")
+            return True
+
+        # 没有登录状态，访问首页让用户登录
+        await page.goto("https://www.xiaohongshu.com", wait_until="domcontentloaded")
+        await asyncio.sleep(2)
+
+        # 再次检查（访问首页后可能会触发 cookie 设置）
+        cookies = await self._context.cookies()
+        cookie_names = [c["name"] for c in cookies]
+
+        if "web_session" in cookie_names:
+            await self._save_state()
             return True
 
         # 等待用户登录
-        print("⏳ 请在浏览器中登录小红书...")
+        print("⏳ 请在浏览器中登录小红书（最长等待 %d 秒）..." % max_wait)
         waited = 0
         while waited < max_wait:
             cookies = await self._context.cookies()
@@ -159,9 +169,12 @@ class XhsCrawler(BaseCrawler):
             if "web_session" in cookie_names:
                 # 保存状态
                 await self._save_state()
+                print("✅ 登录成功，状态已保存")
                 return True
             await asyncio.sleep(2)
             waited += 2
+            if waited % 30 == 0:
+                print(f"   等待中... ({waited}秒)")
 
         return False
 
