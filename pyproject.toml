@@ -1,0 +1,77 @@
+[project]
+name = "offer-sherlock"
+version = "0.1.0"
+description = "AI-powered recruitment intelligence agent for 2026 campus hiring - monitoring tech industry salary trends and social sentiment"
+authors = [
+    {name = "jieke wu", email = "jieke.wu@kaust.edu.sa"}
+]
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+    # Core
+    "python-dotenv>=1.0.0",
+    "pydantic>=2.0.0",
+
+    # LLM Framework
+    "langchain>=0.1.0",
+    "langchain-openai>=0.0.5",
+    "langchain-anthropic>=0.1.0",
+
+    # Web Scraping
+    "crawl4ai>=0.2.0",
+
+    # Social Media (Xiaohongshu)
+    "xhs>=0.1.0",
+    "apify-client>=1.0.0",
+
+    # Database
+    "sqlalchemy>=2.0.0",
+
+    # Data Processing
+    "pandas>=2.0.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.4.0",
+    "pytest-cov>=4.1.0",
+    "pytest-asyncio>=0.21.0",
+    "black>=23.0.0",
+    "ruff>=0.1.0",
+    "mypy>=1.5.0",
+    "ipython>=8.0.0",
+]
+
+dashboard = [
+    "streamlit>=1.28.0",
+    "plotly>=5.0.0",
+]
+
+scheduler = [
+    "schedule>=1.2.0",
+    "apscheduler>=3.10.0",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = "test_*.py"
+python_functions = "test_*"
+addopts = "-v --cov=src/offer_sherlock --cov-report=html --cov-report=term"
+
+[tool.black]
+line-length = 100
+target-version = ['py311']
+
+[tool.ruff]
+line-length = 100
+select = ["E", "F", "I", "N", "W"]
+
+[tool.mypy]
+python_version = "3.11"
+warn_return_any = true
+warn_unused_configs = true
+disallow_untyped_defs = false
