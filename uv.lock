@@ -2459,6 +2459,7 @@ version = "0.1.0"
 source = { editable = "." }
 dependencies = [
     { name = "apify-client" },
+    { name = "apscheduler" },
     { name = "crawl4ai" },
     { name = "dashscope" },
     { name = "langchain" },
@@ -2497,6 +2498,7 @@ scheduler = [
 [package.metadata]
 requires-dist = [
     { name = "apify-client", specifier = ">=1.0.0" },
+    { name = "apscheduler", specifier = ">=3.11.1" },
     { name = "apscheduler", marker = "extra == 'scheduler'", specifier = ">=3.10.0" },
     { name = "black", marker = "extra == 'dev'", specifier = ">=23.0.0" },
     { name = "crawl4ai", specifier = ">=0.2.0" },
